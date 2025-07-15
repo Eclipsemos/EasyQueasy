@@ -80,8 +80,8 @@ fun Overlay(
     val overlayAreaSize by appData.rememberOverlayAreaSize()  // 覆盖层区域大小(0-1)
     val overlaySpeed by appData.rememberOverlaySpeed()        // 覆盖层运动速度(0-1)
     
-    // 将速度设置映射到实际的速度因子(0.6倍到2.7倍)
-    val speedFactor by remember { derivedStateOf { lerp(0.6f, 2.7f, overlaySpeed) } }
+    // 将速度设置映射到实际的速度因子(0.2倍到2.7倍)
+    val speedFactor by remember { derivedStateOf { lerp(0.2f, 2.7f, overlaySpeed) } }
 
     // 时间管理：记录启动时间，用于启动动画和时间计算
     val startTimeMillis by remember {
@@ -228,10 +228,12 @@ fun Overlay(
         val startupEffectActive = !isPreview && startupEffectProgress in 0f..1f
 
         // === 粒子基础半径计算 ===
-        // 基础大小4dp，随效果强度线性缩放
-        val baseDotRadius = 4.dp.toPx() * finalEffectIntensity
+        // 基础大小：常驻2dp + 运动响应2dp，随效果强度线性缩放
+        val constantDotRadius = 2.dp.toPx()  // 常驻显示的基础半径
+        val motionDotRadius = 2.dp.toPx() * finalEffectIntensity  // 运动响应的额外半径
+        val baseDotRadius = constantDotRadius + motionDotRadius
 
-        // 只有当粒子足够大或启动动画活跃时才进行渲染
+        // 粒子现在会常驻显示，运动时会变得更大更明显
         if (baseDotRadius > 0.15f || startupEffectActive) {
             val screenDepthPx = screenDepth.toPx()
             
@@ -240,7 +242,7 @@ fun Overlay(
                 PreviewMode.SPEED -> 30.dp.toPx()  // 速度预览模式使用固定小尺寸
                 else -> peripherySize.toPx() *
                         lerp(0.2f, 1f, overlayAreaSize) *                    // 用户设置的区域大小
-                        lerp(0.4f, 1f, finalEffectIntensity).pow(2f)         // 效果强度的非线性缩放
+                        lerp(0.6f, 1f, finalEffectIntensity).pow(1.5f)       // 减弱效果强度影响，确保常驻可见性
             }
 
             // === 3D位置偏移计算 ===
